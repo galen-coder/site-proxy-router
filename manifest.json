@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "站点代理路由器",
+  "version": "2.3.0",
+  "minimum_chrome_version": "108",
+  "description": "按网站通配符规则选择不同的 HTTP 代理，未匹配网站可直连或使用默认代理，支持 Windows 风格绕过列表、回退链、Basic 认证和临时站点路由。",
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "contextMenus",
+    "webRequest",
+    "webRequestAuthProvider"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "站点代理路由器",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

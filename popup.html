@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>站点代理路由器</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="panel">
+    <header class="app-header">
+      <div class="brand">
+        <img src="icons/icon32.png" width="32" height="32" alt="">
+        <div>
+          <h1>站点代理路由器</h1>
+          <p id="host">正在读取当前网站…</p>
+        </div>
+      </div>
+      <label class="switch" title="启用或停用代理路由">
+        <input id="enabled" type="checkbox" aria-label="启用代理路由">
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <section id="status-card" class="status-card" aria-live="polite">
+      <span id="status-dot" class="dot pending"></span>
+      <div class="status-copy">
+        <strong id="status-title">检查中</strong>
+        <p id="status-detail">正在读取代理状态</p>
+      </div>
+    </section>
+
+    <section id="match-card" class="match-card route-pending" aria-live="polite">
+      <div class="match-heading">
+        <div class="route-label">
+          <span id="route-symbol" class="route-symbol">…</span>
+          <span id="route-kicker">当前路由</span>
+        </div>
+        <span id="route-badge" class="route-badge">检查中</span>
+      </div>
+      <strong id="match-name" class="match-name">—</strong>
+      <p id="match-detail" class="match-detail">—</p>
+    </section>
+
+    <section class="temporary">
+      <div class="section-title-row">
+        <div>
+          <h2>当前网站临时路由</h2>
+          <p class="section-subtitle">优先于普通分流规则，浏览器重启后自动清除</p>
+        </div>
+      </div>
+      <div class="route-actions">
+        <button id="direct" class="direct-button" type="button">不走代理</button>
+        <div class="proxy-action">
+          <select id="proxy-select" aria-label="选择临时代理"></select>
+          <button id="use-proxy" class="proxy-button" type="button">走该代理</button>
+        </div>
+      </div>
+      <label class="scope-option">
+        <input id="include-subdomains" type="checkbox" checked>
+        <span>同时应用到当前站点主域及其所有子域名</span>
+      </label>
+      <button id="clear-override" class="clear-button" type="button">清除当前网站临时路由</button>
+    </section>
+
+    <div class="actions">
+      <button id="options" class="primary" type="button">设置规则</button>
+      <button id="refresh" type="button">重新应用</button>
+    </div>
+    <div id="message" class="message hidden" role="alert"></div>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>站点代理路由器设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>站点代理路由器</h1>
+      <p>多代理节点、顺序规则、回退链与 HTTP Basic 自动认证</p>
+    </div>
+    <div class="top-actions">
+      <label class="enable-label"><input id="enabled" type="checkbox"> 启用代理路由</label>
+      <button id="save" class="primary">保存并应用</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <button class="nav active" data-section="proxies">代理节点</button>
+      <button class="nav" data-section="rules">分流规则</button>
+      <button class="nav" data-section="general">默认出口</button>
+      <button class="nav" data-section="import-export">导入与导出</button>
+      <button class="nav" data-section="logs">日志</button>
+    </aside>
+
+    <div class="content">
+      <div id="banner" class="banner neutral">正在读取浏览器代理状态…</div>
+      <div id="validation" class="banner error hidden"></div>
+
+      <section id="section-proxies" class="section active">
+        <div class="section-head">
+          <div>
+            <h2>代理节点</h2>
+            <p>仅支持 HTTP 代理。账号密码只会在代理服务器发起 Basic 认证时提交。</p>
+          </div>
+          <button id="add-proxy" class="primary">添加代理</button>
+        </div>
+        <div id="proxy-list" class="card-list"></div>
+      </section>
+
+      <section id="section-rules" class="section">
+        <div class="section-head">
+          <div>
+            <h2>分流规则</h2>
+            <p>从上到下匹配，第一条命中即停止。<code>*.google.com</code> 只匹配子域名，<code>*google*</code> 匹配主机名中包含 google 的网站。</p>
+          </div>
+          <button id="add-rule" class="primary">添加规则</button>
+        </div>
+        <div id="rule-list" class="card-list"></div>
+      </section>
+
+      <section id="section-general" class="section">
+        <div class="section-head">
+          <div>
+            <h2>默认出口</h2>
+            <p>未命中任何规则的网站可以直接连接，或使用指定的默认代理。</p>
+          </div>
+          <button id="capture-system">重新读取当前代理</button>
+        </div>
+        <div class="card form-card">
+          <label>未匹配网站的处理方式
+            <select id="default-mode">
+              <option value="direct">直接连接（DIRECT）</option>
+              <option value="proxy">使用指定的默认代理</option>
+            </select>
+          </label>
+          <div id="default-proxy-settings">
+          <label>默认主代理
+            <select id="default-proxy"></select>
+          </label>
+          <label>默认回退链（按所选代理节点在列表中的顺序）
+            <select id="default-fallbacks" multiple size="6"></select>
+          </label>
+          <label class="check warning-check"><input id="default-direct" type="checkbox"> 所有默认代理失败后允许直连（默认关闭，可能导致流量泄漏）</label>
+          </div>
+          <label class="check"><input id="bypass-local" type="checkbox"> 请勿将代理服务器用于本地（Intranet）地址</label>
+          <label>不走代理的地址（Windows 例外列表语法）
+            <textarea id="bypass-patterns" rows="7" placeholder="localhost;*.contoso.com;10.*;https://secure.example.com:443"></textarea>
+            <small>使用分号或换行分隔；支持 <code>*</code> 通配符、可选协议和端口。例外列表优先于临时路由和分流规则。</small>
+          </label>
+          <label>点击工具栏图标时
+            <select id="icon-action">
+              <option value="popup">打开站点控制面板</option>
+              <option value="toggle">一键启用/停用</option>
+            </select>
+          </label>
+          <div id="system-info" class="info-box"></div>
+        </div>
+      </section>
+
+      <section id="section-import-export" class="section">
+        <div class="section-head"><div><h2>导入与导出</h2><p>完整导出包含明文密码；匿名导出会移除所有密码。</p></div></div>
+        <div class="card action-grid">
+          <button id="export-full">完整导出（包含密码）</button>
+          <button id="export-anonymous">匿名导出（移除密码）</button>
+          <label class="file-button">导入 JSON<input id="import-file" type="file" accept="application/json,.json"></label>
+        </div>
+      </section>
+
+      <section id="section-logs" class="section">
+        <div class="section-head">
+          <div><h2>操作与错误日志</h2><p>最多保留最近 300 条，不记录网页内容和代理密码。</p></div>
+          <button id="clear-logs" class="danger">清空日志</button>
+        </div>
+        <div id="log-list" class="log-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <template id="proxy-template">
+    <article class="card proxy-card">
+      <div class="card-title-row">
+        <strong class="card-index">代理节点</strong>
+        <div class="card-actions"><button data-action="up" title="上移">↑</button><button data-action="down" title="下移">↓</button><button data-action="test">测试</button><button data-action="delete" class="danger-text">删除</button></div>
+      </div>
+      <div class="form-grid proxy-fields">
+        <label>名称<input data-field="name" type="text" placeholder="例如：海外代理"></label>
+        <label>代理地址<input data-field="host" type="text" placeholder="proxy.example.com"></label>
+        <label>端口<input data-field="port" type="number" min="1" max="65535" placeholder="8080"></label>
+        <label>用户名<input data-field="username" type="text" autocomplete="off" placeholder="可留空"></label>
+        <label class="password-field">密码
+          <span class="password-wrap"><input data-field="password" type="password" autocomplete="new-password" placeholder="可留空"><button type="button" data-action="show-password">显示</button></span>
+        </label>
+      </div>
+      <div class="test-result"></div>
+    </article>
+  </template>
+
+  <template id="rule-template">
+    <article class="card rule-card">
+      <div class="card-title-row">
+        <label class="check"><input data-field="enabled" type="checkbox"> <strong class="card-index">规则</strong></label>
+        <div class="card-actions">
+          <button data-action="up" title="上移">↑</button><button data-action="down" title="下移">↓</button><button data-action="delete" class="danger-text">删除</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <label>规则名称<input data-field="name" type="text" placeholder="例如：Google 服务"></label>
+        <label>主代理<select data-field="proxyId"></select></label>
+        <label class="wide">匹配项（每行一个）
+          <textarea data-field="patterns" rows="6" placeholder="*.google.com&#10;*google*&#10;google.com"></textarea>
+        </label>
+        <label class="wide">回退代理（按代理节点列表顺序）
+          <select data-field="fallbackProxyIds" multiple size="5"></select>
+        </label>
+        <label class="check wide warning-check"><input data-field="allowDirect" type="checkbox"> 所有代理失败后允许直连</label>
+      </div>
+    </article>
+  </template>
+
+  <script src="proxy-core.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
