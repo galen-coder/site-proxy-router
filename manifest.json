@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "站点代理路由器",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "minimum_chrome_version": "108",
   "description": "按网站通配符规则选择不同的 HTTP 代理，未匹配网站可直连或使用默认代理，支持 Windows 风格绕过列表、回退链、Basic 认证和临时站点路由。",
   "permissions": [

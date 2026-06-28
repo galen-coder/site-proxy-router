@@ -87,8 +87,12 @@ assert.notEqual(evaluatePac(bypassConfig, "subonly.example.com"), "DIRECT");
 assert.equal(evaluatePac(bypassConfig, "10.2.3.4", [], [], "http://10.2.3.4/"), "DIRECT");
 assert.equal(Core.resolveRoute(bypassConfig, "api.direct.example.com", [], "https://api.direct.example.com/").type, "bypass");
 assert.equal(
+  Core.resolveRoute(bypassConfig, "api.direct.example.com", [{ host: "direct.example.com", mode: "proxy", proxyId: "p1", includeSubdomains: true }], "https://api.direct.example.com/").type,
+  "temporary"
+);
+assert.equal(
   evaluatePac(bypassConfig, "api.direct.example.com", [{ host: "direct.example.com", mode: "proxy", proxyId: "p1", includeSubdomains: true }]),
-  "DIRECT"
+  "PROXY proxy1.local:8001"
 );
 assert.equal(Core.normalizeBypassPatterns("<local>; *.contoso.com;\nhttps://secure.example.com:443").length, 2);
 assert.equal(Core.matchBypassPattern("https://a.contoso.com/", "a.contoso.com", "*.contoso.com"), true);

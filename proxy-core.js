@@ -432,17 +432,6 @@
   function resolveRoute(configInput, hostInput, overridesInput, urlInput = "") {
     const config = sanitizeConfig(configInput);
     const host = normalizeHost(hostInput);
-    const bypass = matchBypass(config, urlInput, host);
-    if (bypass) {
-      return {
-        type: "bypass",
-        name: bypass.local ? "本地地址直连" : "不走代理列表",
-        host,
-        pattern: bypass.pattern,
-        proxyId: "",
-        direct: true
-      };
-    }
     const override = findOverride(config, host, overridesInput);
     if (override) {
       return {
@@ -454,6 +443,17 @@
         pattern: override.includeSubdomains ? `${override.host} 及其子域名` : override.host,
         proxyId: override.mode === "proxy" ? override.proxyId : "",
         direct: override.mode === "direct"
+      };
+    }
+    const bypass = matchBypass(config, urlInput, host);
+    if (bypass) {
+      return {
+        type: "bypass",
+        name: bypass.local ? "本地地址直连" : "不走代理列表",
+        host,
+        pattern: bypass.pattern,
+        proxyId: "",
+        direct: true
       };
     }
     const matched = matchRule(config, host);
@@ -523,7 +523,7 @@
       port: item.port || 0
     }));
 
-    return `function FindProxyForURL(url, host) {\n  host = String(host || "").toLowerCase().replace(/\\.$/, "");\n  var urlText = String(url || "");\n  var schemeMatch = urlText.match(/^([a-z][a-z0-9+.-]*):\\/\\//i);\n  var scheme = schemeMatch ? schemeMatch[1].toLowerCase() : "";\n  var authority = schemeMatch ? urlText.slice(schemeMatch[0].length).split(/[\\/?#]/, 1)[0] : "";\n  var portMatch = authority.match(/:(\\d+)$/);\n  var urlPort = portMatch ? Number(portMatch[1]) : (scheme === "https" ? 443 : (scheme === "http" ? 80 : 0));\n  var bypassLocal = ${config.bypassLocal ? "true" : "false"};\n  var bypassPatterns = ${JSON.stringify(pacBypassPatterns)};\n  var overrides = ${JSON.stringify(pacOverrides)};\n  var rules = ${JSON.stringify(pacRules)};\n\n  var isIpLiteral = /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(host) || host.indexOf(":") >= 0;\n  if (bypassLocal && host.indexOf(".") < 0 && !isIpLiteral) return "DIRECT";\n  for (var b = 0; b < bypassPatterns.length; b++) {\n    var bypass = bypassPatterns[b];\n    if (bypass.scheme && bypass.scheme !== scheme) continue;\n    if (bypass.port && bypass.port !== urlPort) continue;\n    if ((bypass.hostPattern.indexOf("*") < 0 && host === bypass.hostPattern) ||\n        (bypass.hostPattern.indexOf("*") >= 0 && shExpMatch(host, bypass.hostPattern))) {\n      return "DIRECT";\n    }\n  }\n\n  for (var i = 0; i < overrides.length; i++) {\n    if (host === overrides[i].host ||\n        (overrides[i].includeSubdomains && host.slice(-(overrides[i].host.length + 1)) === "." + overrides[i].host)) {\n      return overrides[i].route;\n    }\n  }\n\n  for (var r = 0; r < rules.length; r++) {\n    for (var p = 0; p < rules[r].patterns.length; p++) {\n      var pattern = rules[r].patterns[p];\n      if ((pattern.indexOf("*") < 0 && host === pattern) ||\n          (pattern.indexOf("*") >= 0 && shExpMatch(host, pattern))) {\n        return rules[r].route;\n      }\n    }\n  }\n\n  return ${JSON.stringify(defaultRoute)};\n}`;
+    return `function FindProxyForURL(url, host) {\n  host = String(host || "").toLowerCase().replace(/\\.$/, "");\n  var urlText = String(url || "");\n  var schemeMatch = urlText.match(/^([a-z][a-z0-9+.-]*):\\/\\//i);\n  var scheme = schemeMatch ? schemeMatch[1].toLowerCase() : "";\n  var authority = schemeMatch ? urlText.slice(schemeMatch[0].length).split(/[\\/?#]/, 1)[0] : "";\n  var portMatch = authority.match(/:(\\d+)$/);\n  var urlPort = portMatch ? Number(portMatch[1]) : (scheme === "https" ? 443 : (scheme === "http" ? 80 : 0));\n  var bypassLocal = ${config.bypassLocal ? "true" : "false"};\n  var bypassPatterns = ${JSON.stringify(pacBypassPatterns)};\n  var overrides = ${JSON.stringify(pacOverrides)};\n  var rules = ${JSON.stringify(pacRules)};\n\n  for (var i = 0; i < overrides.length; i++) {\n    if (host === overrides[i].host ||\n        (overrides[i].includeSubdomains && host.slice(-(overrides[i].host.length + 1)) === "." + overrides[i].host)) {\n      return overrides[i].route;\n    }\n  }\n\n  var isIpLiteral = /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(host) || host.indexOf(":") >= 0;\n  if (bypassLocal && host.indexOf(".") < 0 && !isIpLiteral) return "DIRECT";\n  for (var b = 0; b < bypassPatterns.length; b++) {\n    var bypass = bypassPatterns[b];\n    if (bypass.scheme && bypass.scheme !== scheme) continue;\n    if (bypass.port && bypass.port !== urlPort) continue;\n    if ((bypass.hostPattern.indexOf("*") < 0 && host === bypass.hostPattern) ||\n        (bypass.hostPattern.indexOf("*") >= 0 && shExpMatch(host, bypass.hostPattern))) {\n      return "DIRECT";\n    }\n  }\n\n  for (var r = 0; r < rules.length; r++) {\n    for (var p = 0; p < rules[r].patterns.length; p++) {\n      var pattern = rules[r].patterns[p];\n      if ((pattern.indexOf("*") < 0 && host === pattern) ||\n          (pattern.indexOf("*") >= 0 && shExpMatch(host, pattern))) {\n        return rules[r].route;\n      }\n    }\n  }\n\n  return ${JSON.stringify(defaultRoute)};\n}`;
   }
 
   function buildProxyTestPac(proxy, basePacScript = "") {

@@ -68,7 +68,7 @@ function routePresentation(route, description, routingActive) {
       "→",
       "当前路由",
       "直接连接",
-      `${route.name}${route.pattern ? `；匹配：${route.pattern}` : ""}。此项优先于临时路由和分流规则。`
+      `${route.name}${route.pattern ? `；匹配：${route.pattern}` : ""}。可用临时路由临时覆盖此直连规则。`
     );
     return;
   }
@@ -104,7 +104,7 @@ function routePresentation(route, description, routingActive) {
       "→",
       "当前路由",
       "直接连接",
-      "当前网站未命中不走代理列表、临时路由或分流规则，按默认出口设置直接连接。"
+      "当前网站未命中临时路由、不走代理列表或分流规则，按默认出口设置直接连接。"
     );
     return;
   }
@@ -115,7 +115,7 @@ function routePresentation(route, description, routingActive) {
     "默",
     "当前路由",
     description,
-    "当前网站未命中不走代理列表、临时路由或分流规则。"
+    "当前网站未命中临时路由、不走代理列表或分流规则。"
   );
 }
 
@@ -209,14 +209,13 @@ async function loadState() {
     ? matchedRoute.includeSubdomains !== false
     : true;
 
-  const globallyBypassed = matchedRoute?.type === "bypass";
   clearOverrideButton.disabled = !activeOverrideHost;
-  directButton.disabled = !currentHost || globallyBypassed;
-  useProxyButton.disabled = !currentHost || !response.config.proxies.length || globallyBypassed;
-  proxySelect.disabled = !currentHost || !response.config.proxies.length || globallyBypassed;
+  directButton.disabled = !currentHost;
+  useProxyButton.disabled = !currentHost || !response.config.proxies.length;
+  proxySelect.disabled = !currentHost || !response.config.proxies.length;
 
-  if (globallyBypassed) {
-    showMessage("当前网站命中“不走代理”列表。该规则优先级最高，如需临时走代理，请先在设置中移除对应例外项。");
+  if (matchedRoute?.type === "bypass") {
+    showMessage("当前网站命中“不走代理”列表；你仍可设置临时路由，本次会话内优先使用临时路由。");
   }
 }
 
